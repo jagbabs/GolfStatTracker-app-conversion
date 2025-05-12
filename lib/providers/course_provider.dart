@@ -207,7 +207,7 @@ class CourseProvider with ChangeNotifier {
       }
       
       // Update total par
-      final totalPar = updatedHolePars.fold(0, (sum, hole) => sum + hole.par);
+      final totalPar = updatedHolePars.fold<int>(0, (sum, hole) => sum + hole.par);
       
       final updatedCourse = course.copyWith(
         holePars: updatedHolePars,

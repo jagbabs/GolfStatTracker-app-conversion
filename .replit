@@ -1,8 +1,8 @@
-modules = ["flutter"]
+modules = ["flutter", "nodejs-20"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["flutter"]
+packages = ["flutter", "unzip"]
 
 [workflows]
 runButton = "run_flutter_app"
@@ -52,3 +52,11 @@ args = "flutter run -d web-server --web-hostname=0.0.0.0 --web-port=5000"
 
 [deployment]
 run = ["sh", "-c", "flutter pub get && flutter run -d web-server --web-port=5000 --web-hostname=0.0.0.0"]
+
+[[ports]]
+localPort = 3000
+externalPort = 3000
+
+[[ports]]
+localPort = 5000
+externalPort = 80

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:golf_stat_tracker/models/round.dart';
+import 'package:golf_stat_tracker/models/hole.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
 import 'package:golf_stat_tracker/widgets/stat_card.dart';
@@ -275,7 +277,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
                   padding: const EdgeInsets.all(16.0),
                   child: SizedBox(
                     height: 200,
-                    child: ScoreChart(rounds: recentRounds),
+                    child: ScoreChart(rounds: recentRounds.cast<Round>()),
                   ),
                 ),
               ),
@@ -703,14 +705,14 @@ class _StatisticsScreenState extends State<StatisticsScreen> with SingleTickerPr
   double _calculateAverageFrontNine(List rounds) {
     if (rounds.isEmpty) return 0;
     
-    final totalFrontNine = rounds.fold(0, (sum, round) => sum + round.frontNineScore);
+    final totalFrontNine = rounds.fold<int>(0, (sum, round) => sum + (round.frontNineScore as int));
     return totalFrontNine / rounds.length;
   }
 
   double _calculateAverageBackNine(List rounds) {
     if (rounds.isEmpty) return 0;
     
-    final totalBackNine = rounds.fold(0, (sum, round) => sum + round.backNineScore);
+    final totalBackNine = rounds.fold<int>(0, (sum, round) => sum + (round.backNineScore as int));
     return totalBackNine / rounds.length;
   }
 

@@ -447,7 +447,7 @@ class DatabaseService {
       };
     }
     
-    final totalScores = completedRounds.fold(0, (sum, round) => sum + round.totalScore);
+    final totalScores = completedRounds.fold<int>(0, (sum, round) => sum + round.totalScore);
     final averageScore = totalScores / completedRounds.length;
     
     final bestRound = completedRounds.reduce((a, b) => a.totalScore < b.totalScore ? a : b);

@@ -101,7 +101,7 @@ class RoundProvider with ChangeNotifier {
       // Calculate total score
       final totalScore = updatedScores
           .where((score) => score.strokes > 0)
-          .fold(0, (sum, score) => sum + score.strokes);
+          .fold<int>(0, (sum, score) => sum + score.strokes);
       
       // Check if all holes have scores
       final isCompleted = updatedScores.every((score) => score.strokes > 0);

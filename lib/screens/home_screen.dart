@@ -13,7 +13,9 @@ import 'package:golf_stat_tracker/widgets/round_summary_card.dart';
 import 'package:intl/intl.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final int initialTab;
+  
+  const HomeScreen({Key? key, this.initialTab = 0}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -418,9 +420,12 @@ class DashboardTab extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 TextButton(
                                   onPressed: () {
-                                    setState(() {
-                                      // Navigate to stats tab
-                                    });
+                                    // Find the parent StatefulWidget to change the tab
+                                    Navigator.of(context).pushReplacement(
+                                      MaterialPageRoute(
+                                        builder: (context) => const HomeScreen(initialTab: 2), // 2 is the index for the Stats tab
+                                      ),
+                                    );
                                   },
                                   child: const Text('View Detailed Stats'),
                                 ),

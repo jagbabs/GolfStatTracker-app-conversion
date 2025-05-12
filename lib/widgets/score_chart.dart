@@ -1,22 +1,17 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:golf_stat_tracker/models/round.dart';
 import 'package:intl/intl.dart';
 
 class ScoreChart extends StatelessWidget {
   final List<Round> rounds;
-  final double minY;
-  final double maxY;
-  final Color lineColor;
-  final Color gradientColor;
+  final Color primaryColor;
+  final Color secondaryColor;
 
   ScoreChart({
     Key? key,
     required this.rounds,
-    this.minY = 0,
-    this.maxY = 120,
-    this.lineColor = const Color(0xff2e7d32), // Match primary green
-    this.gradientColor = const Color(0xff4caf50), // Match secondary green
+    this.primaryColor = const Color(0xff2e7d32),
+    this.secondaryColor = const Color(0xff4caf50),
   }) : super(key: key);
 
   @override
@@ -31,154 +26,141 @@ class ScoreChart extends StatelessWidget {
     final sortedRounds = List<Round>.from(rounds)
       ..sort((a, b) => a.date.compareTo(b.date));
 
-    return LineChart(
-      LineChartData(
-        gridData: FlGridData(
-          show: true,
-          drawVerticalLine: true,
-          getDrawingHorizontalLine: (value) {
-            return FlLine(
-              color: Colors.grey.withOpacity(0.3),
-              strokeWidth: 1,
-            );
-          },
-          getDrawingVerticalLine: (value) {
-            return FlLine(
-              color: Colors.grey.withOpacity(0.3),
-              strokeWidth: 1,
-            );
-          },
-        ),
-        titlesData: FlTitlesData(
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                final index = value.toInt();
-                if (index < 0 || index >= sortedRounds.length) {
-                  return const SizedBox.shrink();
-                }
-                
-                // Show date for first, last, and some points in between
-                if (index == 0 || 
-                    index == sortedRounds.length - 1 || 
-                    index == (sortedRounds.length / 2).floor()) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat.MMMd().format(sortedRounds[index].date),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-              reservedSize: 30,
-            ),
-          ),
-          leftTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (value, meta) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Text(
-                    value.toInt().toString(),
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                );
-              },
-              reservedSize: 30,
-            ),
-          ),
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-        ),
-        borderData: FlBorderData(
-          show: true,
-          border: Border.all(color: Colors.grey.withOpacity(0.5)),
-        ),
-        minX: 0,
-        maxX: (sortedRounds.length - 1).toDouble(),
-        minY: _calculateMinY(sortedRounds),
-        maxY: _calculateMaxY(sortedRounds),
-        lineTouchData: LineTouchData(
-          touchTooltipData: LineTouchTooltipData(
-            tooltipBgColor: Colors.white.withOpacity(0.8),
-            getTooltipItems: (List<LineBarSpot> touchedSpots) {
-              return touchedSpots.map((spot) {
-                final round = sortedRounds[spot.x.toInt()];
-                return LineTooltipItem(
-                  '${round.totalScore} (${round.scoreString})\n${DateFormat.yMMMd().format(round.date)}',
-                  const TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                );
-              }).toList();
-            },
-          ),
-        ),
-        lineBarsData: [
-          LineChartBarData(
-            spots: List.generate(sortedRounds.length, (index) {
-              return FlSpot(
-                index.toDouble(),
-                sortedRounds[index].totalScore.toDouble(),
-              );
-            }),
-            isCurved: true,
-            curveSmoothness: 0.3,
-            color: lineColor,
-            barWidth: 3,
-            isStrokeCapRound: true,
-            dotData: const FlDotData(show: true),
-            belowBarData: BarAreaData(
-              show: true,
-              gradient: LinearGradient(
-                colors: [
-                  gradientColor.withOpacity(0.3),
-                  gradientColor.withOpacity(0.0),
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+    // Find min and max score for scaling
+    int minScore = sortedRounds.first.totalScore;
+    int maxScore = sortedRounds.first.totalScore;
+    
+    for (final round in sortedRounds) {
+      if (round.totalScore < minScore) minScore = round.totalScore;
+      if (round.totalScore > maxScore) maxScore = round.totalScore;
+    }
+    
+    // Add padding to min/max
+    minScore = (minScore - 5).clamp(0, 1000);
+    maxScore = (maxScore + 5).clamp(0, 1000);
+    
+    // Calculate score range
+    final scoreRange = maxScore - minScore;
+    
+    return Card(
+      elevation: 4,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Scores Trend',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 200,
+              child: sortedRounds.length < 2 
+                ? Center(
+                    child: Text(
+                      'Need at least 2 rounds to display trend',
+                      style: TextStyle(color: Colors.grey[600]),
+                    ),
+                  )
+                : Column(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: List.generate(
+                            sortedRounds.length.clamp(0, 10),
+                            (index) {
+                              final round = sortedRounds[index];
+                              // Calculate height percentage based on score
+                              final heightPercentage = scoreRange == 0 
+                                ? 0.5 
+                                : 1 - ((round.totalScore - minScore) / scoreRange);
+                              
+                              return Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Column(
+                                    children: [
+                                      Expanded(
+                                        child: Align(
+                                          alignment: Alignment.bottomCenter,
+                                          child: Container(
+                                            width: 20,
+                                            height: (180 * heightPercentage).clamp(20.0, 180.0),
+                                            decoration: BoxDecoration(
+                                              color: primaryColor,
+                                              borderRadius: BorderRadius.circular(4),
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  primaryColor,
+                                                  secondaryColor,
+                                                ],
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        round.totalScore.toString(),
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                      Text(
+                                        DateFormat.MMMd().format(round.date),
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+            ),
+            const SizedBox(height: 8),
+            if (sortedRounds.isNotEmpty) ...[
+              const Divider(),
+              Text(
+                'Avg Score: ${_calculateAverageScore(sortedRounds).toStringAsFixed(1)}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Best Score: ${_findBestScore(sortedRounds)}',
+                style: TextStyle(color: primaryColor),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
 
-  double _calculateMinY(List<Round> rounds) {
-    if (rounds.isEmpty) return minY;
+  double _calculateAverageScore(List<Round> rounds) {
+    if (rounds.isEmpty) return 0;
     
-    final minScore = rounds
-        .map((round) => round.totalScore)
-        .reduce((value, element) => value < element ? value : element);
-    
-    // Return 5 less than the minimum score or the provided minY, whichever is smaller
-    return (minScore - 5).toDouble() < minY ? (minScore - 5).toDouble() : minY;
+    final totalScore = rounds.fold<int>(0, (sum, round) => sum + round.totalScore);
+    return totalScore / rounds.length;
   }
 
-  double _calculateMaxY(List<Round> rounds) {
-    if (rounds.isEmpty) return maxY;
+  String _findBestScore(List<Round> rounds) {
+    if (rounds.isEmpty) return 'N/A';
     
-    final maxScore = rounds
-        .map((round) => round.totalScore)
-        .reduce((value, element) => value > element ? value : element);
-    
-    // Return 5 more than the maximum score or the provided maxY, whichever is larger
-    return (maxScore + 5).toDouble() > maxY ? (maxScore + 5).toDouble() : maxY;
+    final bestRound = rounds.reduce((a, b) => a.totalScore < b.totalScore ? a : b);
+    return '${bestRound.totalScore} (${DateFormat.yMMMd().format(bestRound.date)})';
   }
 }
