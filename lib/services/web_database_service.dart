@@ -46,7 +46,8 @@ class WebDatabaseService {
         name: 'Sample Player',
         handicap: 15,
         email: 'player@example.com',
-        photoUrl: Constants.defaultPlayerImageUrl,
+        avatarUrl: Constants.defaultPlayerImageUrl,
+        joinDate: DateTime.now(),
       );
       await savePlayer(player);
     }
@@ -69,8 +70,7 @@ class WebDatabaseService {
           ),
         ),
         par: 72,
-        slope: 144,
-        rating: 74.7,
+        holeCount: 18,
       );
 
       final course2 = Course(
@@ -88,8 +88,7 @@ class WebDatabaseService {
           ),
         ),
         par: 72,
-        slope: 148,
-        rating: 76.2,
+        holeCount: 18,
       );
 
       await saveCourse(course1);

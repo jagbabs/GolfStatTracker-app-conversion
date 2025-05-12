@@ -27,6 +27,8 @@ class Constants {
   static const String statisticsRoute = '/statistics';
   
   // Image URLs - Using the provided stock photos
+  static const String defaultPlayerImageUrl = 'https://pixabay.com/get/gc4c1c34c3df24b65a12f4ad87aeeb5551ca33dbdf29d60bdcc1efa0efef8a2a8befc77cc0bf9fa3452af8b48d4a2033d26d2d79bc45ea28bd4cae00b4c1a02b5_1280.jpg';
+  
   static const List<String> courseImageUrls = [
     'https://pixabay.com/get/gf2c376ff1fe20e74f4e50a7bf73226fa7d16b71903a5dd2108c2f50eed6c7e4307a62f16131e757b4606e3d44be669f4dbb58813bb255040ebb20459c18ed599_1280.jpg',
     'https://pixabay.com/get/gb21bcbe55dba3cad722c0d34b10dfcba1e0d9035ae09b5cc5540b805a956b32803bb7a9daeb92c3785a1d480e26505da81a77bab33a86b689ced94dca428de62_1280.jpg',
