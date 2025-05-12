@@ -1,10 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:golf_stat_tracker/models/player.dart';
 import 'package:golf_stat_tracker/services/database_service.dart';
+import 'package:golf_stat_tracker/services/web_database_service.dart';
 import 'package:uuid/uuid.dart';
 
 class PlayerProvider with ChangeNotifier {
-  final DatabaseService _databaseService;
+  final dynamic _databaseService; // Can be DatabaseService or WebDatabaseService
   List<Player> _players = [];
   Player? _currentPlayer;
   

@@ -3,10 +3,11 @@ import 'package:golf_stat_tracker/models/course.dart';
 import 'package:golf_stat_tracker/models/hole.dart';
 import 'package:golf_stat_tracker/models/round.dart';
 import 'package:golf_stat_tracker/services/database_service.dart';
+import 'package:golf_stat_tracker/services/web_database_service.dart';
 import 'package:uuid/uuid.dart';
 
 class RoundProvider with ChangeNotifier {
-  final DatabaseService _databaseService;
+  final dynamic _databaseService; // Can be DatabaseService or WebDatabaseService
   List<Round> _rounds = [];
   Round? _currentRound;
   
