@@ -19,6 +19,18 @@ class GolfCourse {
     required this.holes,
     required this.tees,
   });
+  
+  // Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'club_name': clubName,
+      'course_name': courseName,
+      'location': location.toJson(),
+      'holes': holes.map((h) => h.toJson()).toList(),
+      'tees': tees.toJson(),
+    };
+  }
 
   factory GolfCourse.fromJson(Map<String, dynamic> json) {
     // Safely convert id to int, handling null or non-int values
@@ -132,6 +144,15 @@ class Location {
     this.state,
     this.country,
   });
+  
+  // Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'city': city,
+      'state': state,
+      'country': country,
+    };
+  }
 
   factory Location.fromJson(Map<String, dynamic> json) {
     return Location(
@@ -154,6 +175,16 @@ class Hole {
     required this.yardage,
     this.handicap,
   });
+  
+  // Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'hole_num': holeNumber,
+      'par': par,
+      'yardage': yardage,
+      'handicap': handicap,
+    };
+  }
 
   factory Hole.fromJson(Map<String, dynamic> json) {
     // Safely parse integer values with fallbacks
