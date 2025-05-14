@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:golf_stat_tracker/models/course.dart';
 import 'package:golf_stat_tracker/models/hole.dart';
 import 'package:golf_stat_tracker/models/round.dart';
+import 'package:golf_stat_tracker/screens/course_search_screen.dart';
 import 'package:golf_stat_tracker/providers/course_provider.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
@@ -141,27 +142,73 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Select a Course',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CourseSearchScreen(
+                            onCourseSelected: (course) {
+                              setState(() {
+                                _selectedCourseId = course.id;
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.search),
+                    label: const Text('Find Course'),
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               const Text(
-                'Select a Course',
+                'My Courses',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-              ...courses.map((course) => 
-                RadioListTile<String>(
-                  title: Text(course.name),
-                  subtitle: Text('${course.location} - Par ${course.par}'),
-                  value: course.id,
-                  groupValue: _selectedCourseId,
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedCourseId = value;
-                    });
-                  },
-                ),
-              ),
+              courses.isEmpty
+                  ? const Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text(
+                        'No saved courses. Use the Find Course button to search for courses.',
+                        style: TextStyle(fontStyle: FontStyle.italic),
+                      ),
+                    )
+                  : Column(
+                      children: courses.map((course) => 
+                        RadioListTile<String>(
+                          title: Text(course.name),
+                          subtitle: Text('${course.location} - Par ${course.par}'),
+                          value: course.id,
+                          groupValue: _selectedCourseId,
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedCourseId = value;
+                            });
+                          },
+                        ),
+                      ).toList(),
+                    ),
               const SizedBox(height: 16),
               const Text(
                 'Round Date',
