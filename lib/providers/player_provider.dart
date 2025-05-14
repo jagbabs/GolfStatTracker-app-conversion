@@ -2,12 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:golf_stat_tracker/models/player.dart';
 import 'package:golf_stat_tracker/services/database_service.dart';
 import 'package:golf_stat_tracker/services/web_database_service.dart';
+import 'package:golf_stat_tracker/services/google_sheets_service.dart';
 import 'package:uuid/uuid.dart';
 
 class PlayerProvider with ChangeNotifier {
-  final dynamic _databaseService; // Can be DatabaseService or WebDatabaseService
+  dynamic _databaseService; // Can be DatabaseService, WebDatabaseService, or GoogleSheetsService
   List<Player> _players = [];
   Player? _currentPlayer;
+  
+  // Method to update the database service when storage type changes
+  void updateDatabaseService(dynamic newService) {
+    _databaseService = newService;
+    _loadPlayers();
+  }
   
   PlayerProvider(this._databaseService) {
     _loadPlayers();

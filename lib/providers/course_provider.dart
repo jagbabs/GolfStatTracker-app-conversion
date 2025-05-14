@@ -2,13 +2,20 @@ import 'package:flutter/foundation.dart';
 import 'package:golf_stat_tracker/models/course.dart';
 import 'package:golf_stat_tracker/services/database_service.dart';
 import 'package:golf_stat_tracker/services/web_database_service.dart';
+import 'package:golf_stat_tracker/services/google_sheets_service.dart';
 import 'package:golf_stat_tracker/utils/constants.dart';
 import 'package:uuid/uuid.dart';
 
 class CourseProvider with ChangeNotifier {
-  final dynamic _databaseService; // Can be DatabaseService or WebDatabaseService
+  dynamic _databaseService; // Can be DatabaseService, WebDatabaseService, or GoogleSheetsService
   List<Course> _courses = [];
   Course? _selectedCourse;
+  
+  // Method to update the database service when storage type changes
+  void updateDatabaseService(dynamic newService) {
+    _databaseService = newService;
+    _loadCourses();
+  }
   
   CourseProvider(this._databaseService) {
     _loadCourses();

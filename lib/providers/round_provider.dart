@@ -4,12 +4,19 @@ import 'package:golf_stat_tracker/models/hole.dart';
 import 'package:golf_stat_tracker/models/round.dart';
 import 'package:golf_stat_tracker/services/database_service.dart';
 import 'package:golf_stat_tracker/services/web_database_service.dart';
+import 'package:golf_stat_tracker/services/google_sheets_service.dart';
 import 'package:uuid/uuid.dart';
 
 class RoundProvider with ChangeNotifier {
-  final dynamic _databaseService; // Can be DatabaseService or WebDatabaseService
+  dynamic _databaseService; // Can be DatabaseService, WebDatabaseService, or GoogleSheetsService
   List<Round> _rounds = [];
   Round? _currentRound;
+  
+  // Method to update the database service when storage type changes
+  void updateDatabaseService(dynamic newService) {
+    _databaseService = newService;
+    _loadRounds();
+  }
   
   RoundProvider(this._databaseService) {
     _loadRounds();
