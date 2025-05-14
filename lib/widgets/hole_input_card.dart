@@ -124,30 +124,52 @@ class _HoleInputCardState extends State<HoleInputCard> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: List.generate(
-                      10,
-                      (index) {
-                        final strokeCount = index + 1;
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              _strokes = strokeCount;
-                            });
-                            _saveHoleScore();
-                          },
-                          child: Container(
-                            width: 28,
-                            height: 28,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: _strokes == strokeCount
-                                  ? Theme.of(context).primaryColor
-                                  : Colors.grey[300],
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
+                  Builder(
+                    builder: (context) {
+                      // Check if we're on mobile for proper sizing
+                      final isMobile = ResponsiveHelper.isMobile(context);
+                      final buttonSize = isMobile ? 42.0 : 32.0;
+                      
+                      // Wrap in a horizontal scrollable view to handle small screens 
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: List.generate(
+                        10,
+                        (index) {
+                          final strokeCount = index + 1;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(buttonSize/2),
+                              onTap: () {
+                                // Add haptic feedback for better mobile experience
+                                HapticFeedback.mediumImpact();
+                                setState(() {
+                                  _strokes = strokeCount;
+                                });
+                                _saveHoleScore();
+                              },
+                              child: Container(
+                                width: buttonSize,
+                                height: buttonSize,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: _strokes == strokeCount
+                                      ? Theme.of(context).primaryColor
+                                      : Colors.grey[300],
+                                  // Add shadow for better visibility
+                                  boxShadow: _strokes == strokeCount ? [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ] : null,
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
                               '$strokeCount',
                               style: TextStyle(
                                 color: _strokes == strokeCount
