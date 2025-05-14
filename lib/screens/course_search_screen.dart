@@ -33,6 +33,7 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     // Set focus to search field when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _searchFocusNode.requestFocus();
+      _initializeGolfApi();
     });
   }
 
@@ -41,17 +42,6 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     _searchController.dispose();
     _searchFocusNode.dispose();
     super.dispose();
-  }
-
-  // Initialize API when screen loads
-  @override
-  void initState() {
-    super.initState();
-    // Set focus to search field when screen opens
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _searchFocusNode.requestFocus();
-      _initializeGolfApi();
-    });
   }
   
   // Initialize Golf API
@@ -208,7 +198,7 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     
     // Save to provider
     final courseProvider = Provider.of<CourseProvider>(context, listen: false);
-    courseProvider.addCourse(course);
+    courseProvider.addCourseObject(course);
     
     // Call the callback if provided
     if (widget.onCourseSelected != null) {

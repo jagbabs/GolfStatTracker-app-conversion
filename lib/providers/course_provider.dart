@@ -149,6 +149,17 @@ class CourseProvider with ChangeNotifier {
     return holePars;
   }
   
+  // Add a course directly from a Course object - used by the CourseSearchScreen
+  Future<void> addCourseObject(Course course) async {
+    try {
+      await _databaseService.saveCourse(course);
+      _courses.add(course);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Error adding course: $e');
+    }
+  }
+  
   Future<void> updateCourse(Course course) async {
     try {
       await _databaseService.saveCourse(course);

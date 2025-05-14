@@ -1,5 +1,5 @@
-enum FairwayHit { yes, no, notApplicable }
-enum GreenInRegulation { yes, no }
+enum FairwayHit { yes, no, notApplicable, unknown }
+enum GreenInRegulation { yes, no, unknown }
 enum PuttCount { one, two, three, four, fiveOrMore }
 
 class HoleScore {

@@ -176,23 +176,23 @@ class GolfCourseApiService {
       location: apiCourse.location.city != null && apiCourse.location.state != null
           ? '${apiCourse.location.city}, ${apiCourse.location.state}'
           : 'Unknown Location',
-      imageUrl: null, // Image URL not provided by API
+      imageUrl: 'assets/placeholder_course.png', // Default image
       holePars: holePars,
       par: selectedTeeBox.parTotal,
       holeCount: selectedTeeBox.numberOfHoles,
     );
   }
   
-  // Format hole details for use in the application's Round model
-  static List<HoleScore> formatHoleDetails(List<Hole> holes, String roundId) {
-    return holes.map((hole) => HoleScore(
-      holeNumber: hole.holeNumber,
-      par: hole.par,
-      strokes: 0,
-      putts: 0,
-      fairwayHit: FairwayHit.unknown,
-      greenInRegulation: GreenInRegulation.unknown,
-      penalties: 0,
-    )).toList();
+  // Format hole details for Round - not currently used directly
+  static List<Map<String, dynamic>> formatHoleDetailsForRound(List<Hole> holes, String roundId) {
+    return holes.map((hole) => {
+      'holeNumber': hole.holeNumber,
+      'par': hole.par,
+      'strokes': 0,
+      'putts': 0,
+      'fairwayHit': 'unknown',
+      'greenInRegulation': 'unknown',
+      'penalties': 0,
+    }).toList();
   }
 }
