@@ -5,6 +5,7 @@ import 'package:golf_stat_tracker/models/golf_course_api.dart';
 import 'package:golf_stat_tracker/providers/course_provider.dart';
 import 'package:golf_stat_tracker/services/golf_course_api_service.dart';
 import 'package:golf_stat_tracker/utils/responsive_helper.dart';
+import 'package:golf_stat_tracker/widgets/error_handler.dart';
 import 'package:provider/provider.dart';
 
 class CourseSearchScreen extends StatefulWidget {
@@ -22,6 +23,7 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
   
   bool _isLoading = false;
   bool _hasSearched = false;
+  String? _error;
   List<GolfCourse> _searchResults = [];
   GolfCourse? _selectedCourse;
   List<FormattedTeeBox> _teeBoxes = [];
@@ -357,21 +359,19 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
             ),
           ),
           
-          // Loading indicator
-          if (_isLoading)
-            const Expanded(
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+          // Results area with loading, error states or content
+          Expanded(
+            child: LoadingOrError(
+              isLoading: _isLoading,
+              errorMessage: _error,
+              onRetry: _error != null ? _searchCourses : null,
+              child: _hasSearched && _searchResults.isEmpty && _selectedCourse == null
+                ? const Center(
+                    child: Text('No courses found. Try a different search term.'),
+                  )
+                : const SizedBox.shrink(),
             ),
-          
-          // No results message
-          if (!_isLoading && _hasSearched && _searchResults.isEmpty)
-            const Expanded(
-              child: Center(
-                child: Text('No courses found. Try a different search term.'),
-              ),
-            ),
+          ),
           
           // Search results list
           if (!_isLoading && _searchResults.isNotEmpty && _selectedCourse == null)
