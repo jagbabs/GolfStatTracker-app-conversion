@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:golf_stat_tracker/models/player.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
+import 'package:golf_stat_tracker/screens/google_sheets_screen.dart';
+import 'package:golf_stat_tracker/services/database_manager.dart';
 import 'package:intl/intl.dart';
 
 class PlayerProfileScreen extends StatefulWidget {
@@ -361,6 +363,10 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   }
 
   Widget _buildProfileForm(Player player) {
+    // Get the current database type
+    final dbManager = Provider.of<DatabaseManager>(context, listen: false);
+    final storageTypeText = _getStorageTypeLabel(dbManager.storageType);
+    
     return Column(
       children: [
         TextField(
@@ -398,6 +404,21 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
             leading: const Icon(Icons.calendar_today),
             title: const Text('Member Since'),
             subtitle: Text(DateFormat.yMMMd().format(player.joinDate)),
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.cloud_upload),
+            title: const Text('Google Sheets Integration'),
+            subtitle: const Text('Sync your golf data with Google Sheets'),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const GoogleSheetsScreen(),
+                ),
+              );
+            },
           ),
         ],
         if (_isEditing) ...[
