@@ -19,7 +19,7 @@ class RoundSummaryCard extends StatelessWidget {
     final isMobile = ResponsiveHelper.isMobile(context);
     
     return Card(
-      elevation: ResponsiveHelper.getAdaptiveElevation(context),
+      elevation: ResponsiveHelper.value(context, mobile: 1.0, tablet: 2.0, desktop: 3.0),
       margin: EdgeInsets.symmetric(
         vertical: isMobile ? 6.0 : 8.0,
         horizontal: isMobile ? 2.0 : 0.0,
@@ -28,7 +28,7 @@ class RoundSummaryCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8.0),
         onTap: onTap,
         child: Padding(
-          padding: ResponsiveHelper.getAdaptivePadding(context),
+          padding: ResponsiveHelper.responsivePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -41,7 +41,7 @@ class RoundSummaryCard extends StatelessWidget {
                       round.courseName,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: ResponsiveHelper.getAdaptiveFontSize(context, 16),
+                        fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),

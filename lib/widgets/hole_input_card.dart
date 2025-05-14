@@ -26,15 +26,20 @@ class _HoleInputCardState extends State<HoleInputCard> {
   late bool _fairwayHit;
   late bool _greenInRegulation;
   late int _putts;
-  late List<String> _penalties;
+  late List<Penalty> _penalties;
   late TextEditingController _notesController;
 
   @override
   void initState() {
     super.initState();
     _strokes = widget.holeScore.strokes;
-    _fairwayHit = widget.holeScore.fairwayHit;
-    _greenInRegulation = widget.holeScore.greenInRegulation;
+    
+    // Convert FairwayHit enum to bool
+    _fairwayHit = widget.holeScore.fairwayHit == FairwayHit.yes;
+    
+    // Convert GreenInRegulation enum to bool
+    _greenInRegulation = widget.holeScore.greenInRegulation == GreenInRegulation.yes;
+    
     _putts = widget.holeScore.putts;
     _penalties = List.from(widget.holeScore.penalties);
     _notesController = TextEditingController(text: widget.holeScore.notes);
@@ -420,8 +425,8 @@ class _HoleInputCardState extends State<HoleInputCard> {
                                   ),
                                 ),
                               );
-                            );
-                          },
+                            },
+                          ),
                         ),
                       );
                     },
@@ -502,8 +507,8 @@ class _HoleInputCardState extends State<HoleInputCard> {
       widget.roundId,
       widget.holeScore.holeNumber,
       _strokes,
-      _fairwayHit,
-      _greenInRegulation,
+      _fairwayHit ? FairwayHit.yes : FairwayHit.no,
+      _greenInRegulation ? GreenInRegulation.yes : GreenInRegulation.no,
       _putts,
       _penalties,
       _notesController.text,
