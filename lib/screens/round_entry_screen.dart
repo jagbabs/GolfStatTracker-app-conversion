@@ -223,12 +223,26 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _selectedCourseId != null
-                    ? () => _startNewRound(currentPlayer.id)
+                    ? () {
+                        // Add haptic feedback for better touch feedback
+                        HapticFeedback.mediumImpact();
+                        _startNewRound(currentPlayer.id);
+                      }
                     : null,
                 style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 50),
+                  minimumSize: Size(double.infinity, ResponsiveHelper.value(context, mobile: 60.0, tablet: 50.0)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12.0),
                 ),
-                child: const Text('Start Round'),
+                child: Text(
+                  'Start Round', 
+                  style: TextStyle(
+                    fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),
@@ -286,22 +300,42 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
       children: [
         // Round summary bar
         Container(
-          padding: const EdgeInsets.all(12.0),
-          color: Theme.of(context).colorScheme.surface,
+          padding: ResponsiveHelper.value(
+            context, 
+            mobile: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            tablet: const EdgeInsets.all(12.0),
+          ),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 2,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                _currentRound.courseName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              Expanded(
+                child: Text(
+                  _currentRound.courseName,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-              Text(
-                'Score: ${_currentRound.totalScore > 0 ? "${_currentRound.scoreString} (${_currentRound.totalScore})" : "N/A"}',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
+              Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Text(
+                  'Score: ${_currentRound.totalScore > 0 ? "${_currentRound.scoreString} (${_currentRound.totalScore})" : "N/A"}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 14),
+                  ),
                 ),
               ),
             ],
@@ -310,16 +344,20 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
         
         // Hole indicators
         SizedBox(
-          height: 50,
+          height: ResponsiveHelper.value(context, mobile: 60.0, tablet: 50.0),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             itemCount: holes.length,
             itemBuilder: (context, index) {
               final isCurrentHole = index == _currentHoleIndex;
               final hasScore = holes[index].strokes > 0;
+              // Use larger touch targets for mobile
+              final buttonSize = ResponsiveHelper.value(context, mobile: 48.0, tablet: 40.0);
               
               return GestureDetector(
                 onTap: () {
+                  // Add haptic feedback for better mobile experience
+                  HapticFeedback.selectionClick();
                   setState(() {
                     _currentHoleIndex = index;
                     _pageController.animateToPage(
@@ -330,8 +368,8 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
                   });
                 },
                 child: Container(
-                  width: 40,
-                  margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 8),
+                  width: buttonSize,
+                  margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 8),
                   decoration: BoxDecoration(
                     color: isCurrentHole
                         ? Theme.of(context).primaryColor
@@ -388,45 +426,91 @@ class _RoundEntryScreenState extends State<RoundEntryScreen> {
   }
   
   Widget _buildNavigationBar() {
+    // Check if we're on mobile for better touch targets
+    final isMobile = ResponsiveHelper.isMobile(context);
+    final buttonHeight = isMobile ? 56.0 : 48.0;
+    
     return BottomAppBar(
+      height: buttonHeight + 8, // Add a little padding
+      padding: EdgeInsets.symmetric(horizontal: isMobile ? 8.0 : 16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: _currentHoleIndex > 0 
-                ? () {
-                    setState(() {
-                      _currentHoleIndex--;
-                      _pageController.animateToPage(
-                        _currentHoleIndex,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    });
-                  }
-                : null,
+          // Previous hole button - larger for mobile
+          SizedBox(
+            width: isMobile ? 80.0 : 60.0,
+            height: buttonHeight,
+            child: ElevatedButton(
+              onPressed: _currentHoleIndex > 0 
+                  ? () {
+                      // Add haptic feedback for better mobile experience
+                      HapticFeedback.mediumImpact();
+                      setState(() {
+                        _currentHoleIndex--;
+                        _pageController.animateToPage(
+                          _currentHoleIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      });
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Icon(Icons.arrow_back),
+            ),
           ),
-          TextButton(
-            onPressed: () {
-              _showRoundDetailsDialog();
-            },
-            child: const Text('Round Details'),
+          
+          // Round details button
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  _showRoundDetailsDialog();
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size.fromHeight(buttonHeight),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                ),
+                child: const Text('Round Details', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.arrow_forward),
-            onPressed: _currentHoleIndex < _currentRound.scores.length - 1 
-                ? () {
-                    setState(() {
-                      _currentHoleIndex++;
-                      _pageController.animateToPage(
-                        _currentHoleIndex,
-                        duration: const Duration(milliseconds: 300),
-                        curve: Curves.easeInOut,
-                      );
-                    });
-                  }
-                : null,
+          
+          // Next hole button - larger for mobile
+          SizedBox(
+            width: isMobile ? 80.0 : 60.0,
+            height: buttonHeight,
+            child: ElevatedButton(
+              onPressed: _currentHoleIndex < _currentRound.scores.length - 1 
+                  ? () {
+                      // Add haptic feedback for better mobile experience
+                      HapticFeedback.mediumImpact();
+                      setState(() {
+                        _currentHoleIndex++;
+                        _pageController.animateToPage(
+                          _currentHoleIndex,
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.easeInOut,
+                        );
+                      });
+                    }
+                  : null,
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.zero,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+              ),
+              child: const Icon(Icons.arrow_forward),
+            ),
           ),
         ],
       ),
