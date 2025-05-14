@@ -121,11 +121,23 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     try {
       final results = await GolfCourseApiService.searchGolfCourses(query);
       
+      // We now have a default API key, but still check just in case
       if (results.missingApiKey) {
         setState(() {
           _isLoading = false;
         });
-        _showApiKeyDialog();
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('API key configuration issue. Using default key.')),
+        );
+        
+        // Try to set the default key again and retry
+        await GolfCourseApiService.setApiKey("2TKYWN63GCQPMDXU6Q6XNUFEPA");
+        
+        // Retry the search after a short delay
+        Future.delayed(const Duration(seconds: 1), () {
+          _searchCourses();
+        });
         return;
       }
       
@@ -177,7 +189,17 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
       
       // Check if error is due to missing API key
       if (e.toString().contains('API key not configured')) {
-        _showApiKeyDialog();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('API key configuration issue. Using default key.')),
+        );
+        
+        // Try to set the default key again
+        await GolfCourseApiService.setApiKey("2TKYWN63GCQPMDXU6Q6XNUFEPA");
+        
+        // Retry after a short delay
+        Future.delayed(const Duration(seconds: 1), () {
+          _selectCourse(course);
+        });
         return;
       }
       

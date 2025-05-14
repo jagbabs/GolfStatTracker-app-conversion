@@ -10,7 +10,7 @@ class ApiService {
   static const String _golfCourseApiUrl = 'https://api.golfcourseapi.com/v1';
   
   // API keys (stored securely)
-  static String? _golfCourseApiKey;
+  static String? _golfCourseApiKey = "2TKYWN63GCQPMDXU6Q6XNUFEPA"; // Default API key
   
   // Check if API keys are set
   static bool get isGolfCourseApiConfigured => _golfCourseApiKey != null && _golfCourseApiKey!.isNotEmpty;
@@ -24,7 +24,15 @@ class ApiService {
   static Future<void> _loadApiKeys() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _golfCourseApiKey = prefs.getString('golf_course_api_key');
+      final savedKey = prefs.getString('golf_course_api_key');
+      
+      // Only update the API key if one was previously saved, otherwise keep default
+      if (savedKey != null && savedKey.isNotEmpty) {
+        _golfCourseApiKey = savedKey;
+      } else {
+        // Save the default key to preferences
+        await prefs.setString('golf_course_api_key', _golfCourseApiKey!);
+      }
       
       debugPrint('Golf Course API configured: ${isGolfCourseApiConfigured}');
     } catch (e) {
