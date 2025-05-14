@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:golf_stat_tracker/models/player.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
 import 'package:golf_stat_tracker/screens/google_sheets_screen.dart';
 import 'package:golf_stat_tracker/services/database_manager.dart';
+import 'package:golf_stat_tracker/utils/responsive_helper.dart';
 import 'package:intl/intl.dart';
 
 class PlayerProfileScreen extends StatefulWidget {
@@ -46,7 +48,11 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         }
         
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: ResponsiveHelper.value(
+            context,
+            mobile: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            tablet: const EdgeInsets.all(16.0),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -252,6 +258,9 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                             Center(
                               child: ElevatedButton(
                                 onPressed: () {
+                                  // Add haptic feedback for better mobile experience
+                                  HapticFeedback.mediumImpact();
+                                  
                                   final updatedPlayer = currentPlayer.copyWith(
                                     handicap: recommendedHandicap,
                                   );
@@ -262,7 +271,23 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
                                     ),
                                   );
                                 },
-                                child: const Text('Update Handicap'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: ResponsiveHelper.value(
+                                    context,
+                                    mobile: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                    tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8.0),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Update Handicap',
+                                  style: TextStyle(
+                                    fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 14),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                             ),
                         ],
@@ -300,35 +325,71 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           const SizedBox(height: 24),
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Name',
               hintText: 'Enter your name',
-              prefixIcon: Icon(Icons.person),
+              prefixIcon: const Icon(Icons.person),
+              contentPadding: ResponsiveHelper.value(
+                context,
+                mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            style: TextStyle(
+              fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveHelper.value(context, mobile: 20.0, tablet: 16.0)),
           TextField(
             controller: _emailController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Email (optional)',
               hintText: 'Enter your email',
-              prefixIcon: Icon(Icons.email),
+              prefixIcon: const Icon(Icons.email),
+              contentPadding: ResponsiveHelper.value(
+                context,
+                mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             keyboardType: TextInputType.emailAddress,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+            ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: ResponsiveHelper.value(context, mobile: 20.0, tablet: 16.0)),
           TextField(
             controller: _handicapController,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'Handicap',
               hintText: 'Enter your handicap (0 if unknown)',
-              prefixIcon: Icon(Icons.golf_course),
+              prefixIcon: const Icon(Icons.golf_course),
+              contentPadding: ResponsiveHelper.value(
+                context,
+                mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
             keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+            ),
           ),
           const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () {
+              // Add haptic feedback for better touch feedback
+              HapticFeedback.mediumImpact();
+              
               final name = _nameController.text.trim();
               if (name.isEmpty) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -353,9 +414,19 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
               }
             },
             style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
+              minimumSize: Size(double.infinity, ResponsiveHelper.value(context, mobile: 56.0, tablet: 50.0)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 12.0),
             ),
-            child: const Text('Create Profile'),
+            child: Text(
+              'Create Profile',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -372,30 +443,63 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
         TextField(
           controller: _nameController,
           enabled: _isEditing,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Name',
-            prefixIcon: Icon(Icons.person),
+            prefixIcon: const Icon(Icons.person),
+            contentPadding: ResponsiveHelper.value(
+              context,
+              mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          style: TextStyle(
+            fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: ResponsiveHelper.value(context, mobile: 16.0, tablet: 8.0)),
         TextField(
           controller: _emailController,
           enabled: _isEditing,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Email',
-            prefixIcon: Icon(Icons.email),
+            prefixIcon: const Icon(Icons.email),
+            contentPadding: ResponsiveHelper.value(
+              context,
+              mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           keyboardType: TextInputType.emailAddress,
+          style: TextStyle(
+            fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+          ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: ResponsiveHelper.value(context, mobile: 16.0, tablet: 8.0)),
         TextField(
           controller: _handicapController,
           enabled: _isEditing,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Handicap',
-            prefixIcon: Icon(Icons.golf_course),
+            prefixIcon: const Icon(Icons.golf_course),
+            contentPadding: ResponsiveHelper.value(
+              context,
+              mobile: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              tablet: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           keyboardType: TextInputType.number,
+          style: TextStyle(
+            fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+          ),
         ),
         const SizedBox(height: 16),
         if (!_isEditing) ...[
