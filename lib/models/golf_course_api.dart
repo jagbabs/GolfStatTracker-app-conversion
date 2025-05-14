@@ -19,16 +19,42 @@ class GolfCourse {
   });
 
   factory GolfCourse.fromJson(Map<String, dynamic> json) {
+    // Safely convert id to int, handling null or non-int values
+    int id = 0;
+    try {
+      if (json['id'] != null) {
+        if (json['id'] is int) {
+          id = json['id'];
+        } else if (json['id'] is String) {
+          id = int.tryParse(json['id']) ?? 0;
+        }
+      }
+    } catch (e) {
+      debugPrint('Error parsing course id: $e');
+    }
+    
     return GolfCourse(
-      id: json['id'],
+      id: id,
       clubName: json['club_name'] ?? 'Unknown Club',
       courseName: json['course_name'] ?? 'Main Course',
       location: Location.fromJson(json['location'] ?? {}),
-      holes: (json['holes'] as List<dynamic>?)
-              ?.map((h) => Hole.fromJson(h))
-              .toList() ?? [],
+      holes: _parseHoles(json),
       tees: TeeBoxes.fromJson(json['tees'] ?? {'male': [], 'female': []}),
     );
+  }
+  
+  // Helper method to safely parse holes
+  static List<Hole> _parseHoles(Map<String, dynamic> json) {
+    try {
+      if (json['holes'] is List) {
+        return (json['holes'] as List)
+            .map((h) => Hole.fromJson(h is Map<String, dynamic> ? h : {}))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing holes: $e');
+    }
+    return [];
   }
 
   factory GolfCourse.empty() {
@@ -100,11 +126,57 @@ class Hole {
   });
 
   factory Hole.fromJson(Map<String, dynamic> json) {
+    // Safely parse integer values with fallbacks
+    int holeNumber = 0;
+    int par = 4;
+    int yardage = 0;
+    int? handicap;
+    
+    try {
+      // Hole number
+      if (json['hole_num'] != null) {
+        if (json['hole_num'] is int) {
+          holeNumber = json['hole_num'];
+        } else if (json['hole_num'] is String) {
+          holeNumber = int.tryParse(json['hole_num']) ?? 0;
+        }
+      }
+      
+      // Par
+      if (json['par'] != null) {
+        if (json['par'] is int) {
+          par = json['par'];
+        } else if (json['par'] is String) {
+          par = int.tryParse(json['par']) ?? 4;
+        }
+      }
+      
+      // Yardage
+      if (json['yardage'] != null) {
+        if (json['yardage'] is int) {
+          yardage = json['yardage'];
+        } else if (json['yardage'] is String) {
+          yardage = int.tryParse(json['yardage']) ?? 0;
+        }
+      }
+      
+      // Handicap
+      if (json['handicap'] != null) {
+        if (json['handicap'] is int) {
+          handicap = json['handicap'];
+        } else if (json['handicap'] is String) {
+          handicap = int.tryParse(json['handicap']);
+        }
+      }
+    } catch (e) {
+      debugPrint('Error parsing hole data: $e');
+    }
+    
     return Hole(
-      holeNumber: json['hole_num'] ?? 0,
-      par: json['par'] ?? 4,
-      yardage: json['yardage'] ?? 0,
-      handicap: json['handicap'],
+      holeNumber: holeNumber,
+      par: par,
+      yardage: yardage,
+      handicap: handicap,
     );
   }
 }
@@ -119,13 +191,28 @@ class TeeBoxes {
   });
 
   factory TeeBoxes.fromJson(Map<String, dynamic> json) {
+    List<TeeBox> maleTees = [];
+    List<TeeBox> femaleTees = [];
+    
+    try {
+      if (json['male'] is List) {
+        maleTees = (json['male'] as List)
+            .map((t) => TeeBox.fromJson(t is Map<String, dynamic> ? t : {}))
+            .toList();
+      }
+      
+      if (json['female'] is List) {
+        femaleTees = (json['female'] as List)
+            .map((t) => TeeBox.fromJson(t is Map<String, dynamic> ? t : {}))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing tee boxes: $e');
+    }
+    
     return TeeBoxes(
-      male: (json['male'] as List<dynamic>?)
-            ?.map((t) => TeeBox.fromJson(t))
-            .toList() ?? [],
-      female: (json['female'] as List<dynamic>?)
-              ?.map((t) => TeeBox.fromJson(t))
-              .toList() ?? [],
+      male: maleTees,
+      female: femaleTees,
     );
   }
 }
