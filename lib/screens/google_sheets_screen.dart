@@ -3,6 +3,10 @@ import 'package:provider/provider.dart';
 import 'package:golf_stat_tracker/services/database_manager.dart';
 import 'package:golf_stat_tracker/services/google_auth_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:golf_stat_tracker/providers/player_provider.dart';
+import 'package:golf_stat_tracker/providers/course_provider.dart';
+import 'package:golf_stat_tracker/providers/round_provider.dart';
 
 class GoogleSheetsScreen extends StatefulWidget {
   const GoogleSheetsScreen({Key? key}) : super(key: key);
@@ -421,8 +425,3 @@ class _GoogleSheetsScreenState extends State<GoogleSheetsScreen> {
     }
   }
 }
-
-// Import provider classes for database updating
-import 'package:golf_stat_tracker/providers/player_provider.dart';
-import 'package:golf_stat_tracker/providers/course_provider.dart';
-import 'package:golf_stat_tracker/providers/round_provider.dart';

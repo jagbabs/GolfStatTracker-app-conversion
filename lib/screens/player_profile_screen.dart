@@ -365,7 +365,7 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
   Widget _buildProfileForm(Player player) {
     // Get the current database type
     final dbManager = Provider.of<DatabaseManager>(context, listen: false);
-    final storageTypeText = _getStorageTypeLabel(dbManager.storageType);
+    final storageType = dbManager.storageType.toString().split('.').last;
     
     return Column(
       children: [
@@ -408,8 +408,8 @@ class _PlayerProfileScreenState extends State<PlayerProfileScreen> {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.cloud_upload),
-            title: const Text('Google Sheets Integration'),
-            subtitle: const Text('Sync your golf data with Google Sheets'),
+            title: const Text('Data Storage Settings'),
+            subtitle: Text('Current: $storageType'),
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: () {
               Navigator.push(
