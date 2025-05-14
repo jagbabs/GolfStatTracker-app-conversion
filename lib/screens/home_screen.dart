@@ -113,23 +113,36 @@ class DashboardTab extends StatelessWidget {
               // Welcome Banner with Course Image
               Stack(
                 children: [
-                  // Background Image
-                  Image.network(
-                    Constants.courseImageUrls[0],
+                  // Background Image with FadeInImage for better loading
+                  FadeInImage.assetNetwork(
+                    placeholder: 'assets/placeholder_course.png',
+                    image: Constants.courseImageUrls[0],
                     width: double.infinity,
-                    height: 180,
+                    height: MediaQuery.of(context).size.height * 0.22, // Responsive height
                     fit: BoxFit.cover,
+                    imageErrorBuilder: (context, error, stackTrace) {
+                      // Fallback image if network image fails to load
+                      return Container(
+                        width: double.infinity,
+                        height: MediaQuery.of(context).size.height * 0.22,
+                        color: Colors.green.shade300,
+                        child: const Center(
+                          child: Icon(Icons.golf_course, size: 48, color: Colors.white),
+                        ),
+                      );
+                    },
                   ),
                   // Dark overlay for better text readability
                   Container(
                     width: double.infinity,
-                    height: 180,
-                    color: Colors.black.withOpacity(0.3),
+                    height: MediaQuery.of(context).size.height * 0.22,
+                    color: Colors.black.withOpacity(0.4),
                   ),
-                  // Welcome Text
+                  // Welcome Text - Positioned safely within the container
                   Positioned(
                     bottom: 20,
                     left: 20,
+                    right: 20, // Set right constraint for small screens
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -139,13 +152,29 @@ class DashboardTab extends StatelessWidget {
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 3.0,
+                                color: Colors.black,
+                                offset: Offset(1.0, 1.0),
+                              ),
+                            ],
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         Text(
                           'Handicap: ${currentPlayer.handicap}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
+                            shadows: [
+                              Shadow(
+                                blurRadius: 3.0,
+                                color: Colors.black,
+                                offset: Offset(1.0, 1.0),
+                              ),
+                            ],
                           ),
                         ),
                       ],

@@ -70,6 +70,17 @@ class GolfStatTracker extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
+      builder: (context, child) {
+        // Apply responsive font scaling
+        return MediaQuery(
+          // Set the maximum text scaling factor to prevent
+          // excessively large text on mobile devices
+          data: MediaQuery.of(context).copyWith(
+            textScaleFactor: MediaQuery.of(context).textScaleFactor.clamp(0.8, 1.4),
+          ),
+          child: child!,
+        );
+      },
       home: const HomeScreen(),
     );
   }
