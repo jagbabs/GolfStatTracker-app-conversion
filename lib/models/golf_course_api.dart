@@ -219,6 +219,14 @@ class TeeBoxes {
     required this.male,
     required this.female,
   });
+  
+  // Convert to JSON format for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'male': male.map((tee) => tee.toJson()).toList(),
+      'female': female.map((tee) => tee.toJson()).toList(),
+    };
+  }
 
   factory TeeBoxes.fromJson(Map<String, dynamic> json) {
     List<TeeBox> maleTees = [];
@@ -269,6 +277,21 @@ class TeeBox {
     required this.numberOfHoles,
     this.holes,
   });
+  
+  // Convert to JSON for serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'tee_name': teeName,
+      'tee_color': teeColor,
+      'tee_gender': teeGender,
+      'par_total': parTotal,
+      'total_yards': totalYards,
+      'course_rating': courseRating,
+      'slope_rating': slopeRating,
+      'number_of_holes': numberOfHoles,
+      'holes': holes?.map((h) => h.toJson()).toList(),
+    };
+  }
 
   factory TeeBox.fromJson(Map<String, dynamic> json) {
     String teeName = 'Default';
