@@ -222,6 +222,7 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
       debugPrint('Error selecting course: $e');
       setState(() {
         _isLoading = false;
+        _error = 'Error loading course details. Please try a different course.';
       });
       
       // Check if error is due to missing API key
@@ -242,25 +243,6 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
           }
         });
         return;
-      }
-      
-      // Handle other error types
-      if (e.toString().contains('type \'Null\' is not a subtype of type')) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('The course data format is incompatible. Try a different course.'),
-              duration: Duration(seconds: 4),
-            ),
-          );
-        }
-        return;
-      }
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error getting course details: $e')),
-        );
       }
     }
   }
@@ -290,6 +272,228 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     
     // Go back to previous screen
     Navigator.of(context).pop();
+  }
+
+  // Build the main content based on current state
+  Widget _buildMainContent() {
+    // Show no results message when search was performed but no courses found
+    if (_hasSearched && _searchResults.isEmpty && _selectedCourse == null) {
+      return const Center(
+        child: Text('No courses found. Try a different search term.'),
+      );
+    }
+    
+    // Show search results list
+    if (_searchResults.isNotEmpty && _selectedCourse == null) {
+      return ListView.builder(
+        itemCount: _searchResults.length,
+        itemBuilder: (context, index) {
+          final course = _searchResults[index];
+          return ListTile(
+            title: Text(course.clubName),
+            subtitle: Text(
+              [
+                course.courseName != 'Main Course' ? course.courseName : null,
+                course.location.city,
+                course.location.state,
+                course.location.country,
+              ].where((s) => s != null && s.isNotEmpty).join(', '),
+            ),
+            onTap: () {
+              HapticFeedback.mediumImpact();
+              _selectCourse(course);
+            },
+          );
+        },
+      );
+    }
+    
+    // Show course details and tee box selection
+    if (_selectedCourse != null) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Course details
+            Text(
+              _selectedCourse!.clubName,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 20),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              _selectedCourse!.courseName,
+              style: TextStyle(
+                fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            Text(
+              [
+                _selectedCourse!.location.city,
+                _selectedCourse!.location.state,
+                _selectedCourse!.location.country,
+              ].where((s) => s != null && s.isNotEmpty).join(', '),
+            ),
+            const SizedBox(height: 24),
+            
+            // Tee box selection
+            if (_teeBoxes.isNotEmpty) ...[
+              Text(
+                'Select Tees',
+                style: TextStyle(
+                  fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 18),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey.shade300),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedTeeBox != null 
+                        ? _teeBoxes.firstWhere(
+                            (tb) => tb.data == _selectedTeeBox, 
+                            orElse: () => _teeBoxes.first
+                          ).value
+                        : null,
+                    hint: const Text('Select tees'),
+                    items: _teeBoxes.map((teeBox) {
+                      return DropdownMenuItem<String>(
+                        value: teeBox.value,
+                        child: Text(teeBox.label),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      
+                      final selectedTeeBox = _teeBoxes.firstWhere(
+                        (tb) => tb.value == value,
+                      );
+                      
+                      setState(() {
+                        _selectedTeeBox = selectedTeeBox.data;
+                      });
+                    },
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Tee box details
+              if (_selectedTeeBox != null) ...[
+                _buildTeeBoxDetails(),
+                const SizedBox(height: 32),
+                
+                // Save button
+                Center(
+                  child: ElevatedButton(
+                    onPressed: _saveCourse,
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: const Text('Save Course'),
+                  ),
+                ),
+              ],
+            ],
+          ],
+        ),
+      );
+    }
+    
+    // Default empty state - show instructions
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.search,
+              size: 80,
+              color: Colors.green,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Search for a golf course above',
+              style: TextStyle(
+                fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 18),
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Enter the name of a golf course to find it in our database',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTeeBoxDetails() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tee Box Details',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 18),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                _buildDetailRow('Name:', _selectedTeeBox!.teeName),
+                _buildDetailRow('Color:', _selectedTeeBox!.teeColor ?? 'Not specified'),
+                _buildDetailRow('Gender:', _selectedTeeBox!.teeGender == 'male' ? 'Men' : 'Women'),
+                _buildDetailRow('Par Total:', '${_selectedTeeBox!.parTotal}'),
+                _buildDetailRow('Total Yards:', '${_selectedTeeBox!.totalYards}'),
+                _buildDetailRow('Course Rating:', '${_selectedTeeBox!.courseRating ?? "N/A"}'),
+                _buildDetailRow('Slope Rating:', '${_selectedTeeBox!.slopeRating ?? "N/A"}'),
+                _buildDetailRow('Number of Holes:', '${_selectedTeeBox!.numberOfHoles}'),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Text(value),
+        ],
+      ),
+    );
   }
 
   @override
@@ -364,155 +568,6 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
               onRetry: _error != null ? _searchCourses : null,
               child: _buildMainContent(),
             ),
-          ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Course details
-                    Text(
-                      _selectedCourse!.clubName,
-                      style: TextStyle(
-                        fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 20),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      _selectedCourse!.courseName,
-                      style: TextStyle(
-                        fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                    Text(
-                      [
-                        _selectedCourse!.location.city,
-                        _selectedCourse!.location.state,
-                        _selectedCourse!.location.country,
-                      ].where((s) => s != null && s.isNotEmpty).join(', '),
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Tee box selection
-                    if (_teeBoxes.isNotEmpty) ...[
-                      Text(
-                        'Select Tees',
-                        style: TextStyle(
-                          fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 18),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            isExpanded: true,
-                            value: _selectedTeeBox != null 
-                                ? _teeBoxes.firstWhere(
-                                    (tb) => tb.data == _selectedTeeBox, 
-                                    orElse: () => _teeBoxes.first
-                                  ).value
-                                : null,
-                            hint: const Text('Select tees'),
-                            items: _teeBoxes.map((teeBox) {
-                              return DropdownMenuItem<String>(
-                                value: teeBox.value,
-                                child: Text(teeBox.label),
-                              );
-                            }).toList(),
-                            onChanged: (value) {
-                              if (value == null) return;
-                              
-                              final selectedTeeBox = _teeBoxes.firstWhere(
-                                (tb) => tb.value == value,
-                              );
-                              
-                              setState(() {
-                                _selectedTeeBox = selectedTeeBox.data;
-                              });
-                            },
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      
-                      // Tee box details
-                      if (_selectedTeeBox != null) ...[
-                        _buildTeeBoxDetails(),
-                        const SizedBox(height: 32),
-                        
-                        // Save button
-                        Center(
-                          child: ElevatedButton(
-                            onPressed: _saveCourse,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text('Save Course'),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ],
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTeeBoxDetails() {
-    if (_selectedTeeBox == null) return const SizedBox.shrink();
-    
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Tee Details',
-              style: TextStyle(
-                fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const Divider(),
-            _buildDetailRow('Par Total:', '${_selectedTeeBox!.parTotal}'),
-            _buildDetailRow('Total Yards:', '${_selectedTeeBox!.totalYards}'),
-            _buildDetailRow('Course Rating:', '${_selectedTeeBox!.courseRating ?? "N/A"}'),
-            _buildDetailRow('Slope Rating:', '${_selectedTeeBox!.slopeRating ?? "N/A"}'),
-            _buildDetailRow('Number of Holes:', '${_selectedTeeBox!.numberOfHoles}'),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
         ],
       ),
