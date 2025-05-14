@@ -1,6 +1,8 @@
 // Golf Course API models
 // Based on the original web application's types/golfCourseApi.ts
 
+import 'package:flutter/foundation.dart';
+
 class GolfCourse {
   final int id;
   final String clubName;
@@ -79,10 +81,38 @@ class SearchResult {
   });
 
   factory SearchResult.fromJson(Map<String, dynamic> json) {
+    List<GolfCourse> courses = [];
+    
+    try {
+      // Check if courses field exists and is a list
+      if (json['courses'] != null && json['courses'] is List) {
+        courses = (json['courses'] as List)
+            .map((c) {
+              try {
+                // Filter out any items that are not maps
+                if (c is Map<String, dynamic>) {
+                  return GolfCourse.fromJson(c);
+                } else {
+                  debugPrint('Skipping invalid course entry: $c');
+                  return null;
+                }
+              } catch (e) {
+                debugPrint('Error parsing course in search results: $e');
+                return null;
+              }
+            })
+            .where((c) => c != null) // Remove null entries
+            .cast<GolfCourse>() // Cast remaining entries to GolfCourse
+            .toList();
+      } else {
+        debugPrint('No valid courses found in search results or malformed response');
+      }
+    } catch (e) {
+      debugPrint('Error parsing search results: $e');
+    }
+    
     return SearchResult(
-      courses: (json['courses'] as List<dynamic>?)
-              ?.map((c) => GolfCourse.fromJson(c))
-              .toList() ?? [],
+      courses: courses,
       missingApiKey: json['missingApiKey'] == true,
     );
   }
@@ -241,19 +271,83 @@ class TeeBox {
   });
 
   factory TeeBox.fromJson(Map<String, dynamic> json) {
+    String teeName = 'Default';
+    String teeGender = 'male';
+    int parTotal = 72;
+    int totalYards = 6000;
+    double? courseRating;
+    int? slopeRating;
+    int numberOfHoles = 18;
+    List<Hole>? holesList;
+    
+    try {
+      // Parse string values with fallbacks
+      teeName = json['tee_name'] ?? 'Default';
+      teeGender = json['tee_gender'] ?? 'male';
+      
+      // Parse integer values
+      if (json['par_total'] != null) {
+        if (json['par_total'] is int) {
+          parTotal = json['par_total'];
+        } else if (json['par_total'] is String) {
+          parTotal = int.tryParse(json['par_total']) ?? 72;
+        }
+      }
+      
+      if (json['total_yards'] != null) {
+        if (json['total_yards'] is int) {
+          totalYards = json['total_yards'];
+        } else if (json['total_yards'] is String) {
+          totalYards = int.tryParse(json['total_yards']) ?? 6000;
+        }
+      }
+      
+      if (json['number_of_holes'] != null) {
+        if (json['number_of_holes'] is int) {
+          numberOfHoles = json['number_of_holes'];
+        } else if (json['number_of_holes'] is String) {
+          numberOfHoles = int.tryParse(json['number_of_holes']) ?? 18;
+        }
+      }
+      
+      // Parse course rating (double)
+      if (json['course_rating'] != null) {
+        if (json['course_rating'] is double) {
+          courseRating = json['course_rating'];
+        } else {
+          courseRating = double.tryParse(json['course_rating'].toString());
+        }
+      }
+      
+      // Parse slope rating (int)
+      if (json['slope_rating'] != null) {
+        if (json['slope_rating'] is int) {
+          slopeRating = json['slope_rating'];
+        } else if (json['slope_rating'] is String) {
+          slopeRating = int.tryParse(json['slope_rating']);
+        }
+      }
+      
+      // Parse holes
+      if (json['holes'] is List) {
+        holesList = (json['holes'] as List)
+            .map((h) => Hole.fromJson(h is Map<String, dynamic> ? h : {}))
+            .toList();
+      }
+    } catch (e) {
+      debugPrint('Error parsing tee box: $e');
+    }
+    
     return TeeBox(
-      teeName: json['tee_name'] ?? 'Default',
+      teeName: teeName,
       teeColor: json['tee_color'],
-      teeGender: json['tee_gender'] ?? 'male',
-      parTotal: json['par_total'] ?? 72,
-      totalYards: json['total_yards'] ?? 6000,
-      courseRating: json['course_rating'] != null ? 
-                   double.tryParse(json['course_rating'].toString()) : 72.0,
-      slopeRating: json['slope_rating'],
-      numberOfHoles: json['number_of_holes'] ?? 18,
-      holes: (json['holes'] as List<dynamic>?)
-              ?.map((h) => Hole.fromJson(h))
-              .toList(),
+      teeGender: teeGender,
+      parTotal: parTotal,
+      totalYards: totalYards,
+      courseRating: courseRating,
+      slopeRating: slopeRating,
+      numberOfHoles: numberOfHoles,
+      holes: holesList,
     );
   }
 }

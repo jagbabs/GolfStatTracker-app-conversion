@@ -169,7 +169,44 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     });
     
     try {
+      // Check if course ID is valid before proceeding
+      if (course.id <= 0) {
+        setState(() {
+          _isLoading = false;
+        });
+        
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid course ID. Please select a different course.'),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
+        return;
+      }
+      
       final courseDetails = await GolfCourseApiService.getGolfCourseById(course.id);
+      
+      // Ensure we have a valid course object
+      if (courseDetails.holes.isEmpty && (courseDetails.tees.male.isEmpty && courseDetails.tees.female.isEmpty)) {
+        // We have a course but it doesn't have holes or tees - create basic tee box
+        final basicTeeBox = TeeBox(
+          teeName: 'Standard',
+          teeGender: 'male',
+          parTotal: 72,
+          totalYards: 6500,
+          numberOfHoles: 18,
+          holes: List.generate(18, (i) => Hole(
+            holeNumber: i + 1,
+            par: 4,
+            yardage: 350,
+          )),
+        );
+        
+        courseDetails.tees.male.add(basicTeeBox);
+      }
+      
       final teeBoxes = GolfCourseApiService.getFormattedTeeBoxes(courseDetails);
       
       setState(() {
@@ -183,23 +220,41 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
         }
       });
     } catch (e) {
+      debugPrint('Error selecting course: $e');
       setState(() {
         _isLoading = false;
       });
       
       // Check if error is due to missing API key
       if (e.toString().contains('API key not configured')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('API key configuration issue. Using default key.')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('API key configuration issue. Using default key.')),
+          );
+        }
         
         // Try to set the default key again
         await GolfCourseApiService.setApiKey("2TKYWN63GCQPMDXU6Q6XNUFEPA");
         
         // Retry after a short delay
         Future.delayed(const Duration(seconds: 1), () {
-          _selectCourse(course);
+          if (mounted) {
+            _selectCourse(course);
+          }
         });
+        return;
+      }
+      
+      // Handle other error types
+      if (e.toString().contains('type \'Null\' is not a subtype of type')) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('The course data format is incompatible. Try a different course.'),
+              duration: Duration(seconds: 4),
+            ),
+          );
+        }
         return;
       }
       
