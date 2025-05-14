@@ -190,20 +190,45 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
       // Ensure we have a valid course object
       if (courseDetails.holes.isEmpty && (courseDetails.tees.male.isEmpty && courseDetails.tees.female.isEmpty)) {
         // We have a course but it doesn't have holes or tees - create basic tee box
-        final basicTeeBox = TeeBox(
-          teeName: 'Standard',
+        final defaultHoles = List.generate(18, (i) => Hole(
+          holeNumber: i + 1,
+          par: i % 9 == 0 ? 5 : (i % 9 == 8 ? 3 : 4), // Create a mix of par 3, 4, 5
+          yardage: i % 9 == 0 ? 500 : (i % 9 == 8 ? 180 : 370), // Realistic yardages
+          handicap: i + 1,
+        ));
+        
+        // Calculate total par and yardage
+        int totalPar = defaultHoles.fold(0, (sum, hole) => sum + hole.par);
+        int totalYards = defaultHoles.fold(0, (sum, hole) => sum + hole.yardage);
+        
+        // Create different tee box options
+        final mensTeeBox = TeeBox(
+          teeName: 'Men\'s',
+          teeColor: 'blue',
           teeGender: 'male',
-          parTotal: 72,
-          totalYards: 6500,
+          parTotal: totalPar,
+          totalYards: totalYards,
+          courseRating: 72.0,
+          slopeRating: 128,
           numberOfHoles: 18,
-          holes: List.generate(18, (i) => Hole(
-            holeNumber: i + 1,
-            par: 4,
-            yardage: 350,
-          )),
+          holes: defaultHoles,
         );
         
-        courseDetails.tees.male.add(basicTeeBox);
+        final womensTeeBox = TeeBox(
+          teeName: 'Women\'s',
+          teeColor: 'red',
+          teeGender: 'female',
+          parTotal: totalPar,
+          totalYards: (totalYards * 0.9).round(), // Slightly shorter
+          courseRating: 72.0,
+          slopeRating: 125,
+          numberOfHoles: 18,
+          holes: defaultHoles,
+        );
+        
+        // Add both tee options
+        courseDetails.tees.male.add(mensTeeBox);
+        courseDetails.tees.female.add(womensTeeBox);
       }
       
       final teeBoxes = GolfCourseApiService.getFormattedTeeBoxes(courseDetails);
@@ -342,7 +367,7 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
             // Tee box selection
             if (_teeBoxes.isNotEmpty) ...[
               Text(
-                'Select Tees',
+                'Select Tee Box',
                 style: TextStyle(
                   fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 18),
                   fontWeight: FontWeight.bold,
@@ -350,10 +375,10 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
               ),
               const SizedBox(height: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade400),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
@@ -364,11 +389,32 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
                             orElse: () => _teeBoxes.first
                           ).value
                         : null,
-                    hint: const Text('Select tees'),
+                    hint: const Text('Select a tee box'),
+                    icon: const Icon(Icons.golf_course, color: Colors.green),
                     items: _teeBoxes.map((teeBox) {
+                      // Get the tee color for visual indication
+                      Color teeColor = _getTeeBoxColor(teeBox.data.teeColor);
+                      
                       return DropdownMenuItem<String>(
                         value: teeBox.value,
-                        child: Text(teeBox.label),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 16,
+                              height: 16,
+                              margin: const EdgeInsets.only(right: 10),
+                              decoration: BoxDecoration(
+                                color: teeColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.grey.shade300, 
+                                  width: 1
+                                ),
+                              ),
+                            ),
+                            Expanded(child: Text(teeBox.label)),
+                          ],
+                        ),
                       );
                     }).toList(),
                     onChanged: (value) {
@@ -377,6 +423,9 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
                       final selectedTeeBox = _teeBoxes.firstWhere(
                         (tb) => tb.value == value,
                       );
+                      
+                      // Add haptic feedback when selecting
+                      HapticFeedback.selectionClick();
                       
                       setState(() {
                         _selectedTeeBox = selectedTeeBox.data;
@@ -458,24 +507,144 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
         const SizedBox(height: 8),
         Card(
           margin: EdgeInsets.zero,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(
+              color: _getTeeBoxColor(_selectedTeeBox!.teeColor),
+              width: 2,
+            ),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 _buildDetailRow('Name:', _selectedTeeBox!.teeName),
-                _buildDetailRow('Color:', _selectedTeeBox!.teeColor ?? 'Not specified'),
+                _buildDetailRow('Color:', _getTeeDisplayColor(_selectedTeeBox!.teeColor)),
                 _buildDetailRow('Gender:', _selectedTeeBox!.teeGender == 'male' ? 'Men' : 'Women'),
                 _buildDetailRow('Par Total:', '${_selectedTeeBox!.parTotal}'),
-                _buildDetailRow('Total Yards:', '${_selectedTeeBox!.totalYards}'),
-                _buildDetailRow('Course Rating:', '${_selectedTeeBox!.courseRating ?? "N/A"}'),
+                _buildDetailRow('Total Yards:', '${_selectedTeeBox!.totalYards} yards'),
+                _buildDetailRow('Course Rating:', _selectedTeeBox!.courseRating != null 
+                    ? '${_selectedTeeBox!.courseRating?.toStringAsFixed(1)}' : 'N/A'),
                 _buildDetailRow('Slope Rating:', '${_selectedTeeBox!.slopeRating ?? "N/A"}'),
                 _buildDetailRow('Number of Holes:', '${_selectedTeeBox!.numberOfHoles}'),
+                
+                if (_selectedTeeBox!.holes != null && _selectedTeeBox!.holes!.isNotEmpty) ...[
+                  const Divider(height: 24),
+                  _buildHolesSummary(_selectedTeeBox!.holes!),
+                ],
               ],
             ),
           ),
         ),
       ],
     );
+  }
+  
+  // Display a summary of front 9, back 9, and total pars/yardages
+  Widget _buildHolesSummary(List<Hole> holes) {
+    int frontPar = 0, backPar = 0;
+    int frontYards = 0, backYards = 0;
+    
+    // Calculate front 9 and back 9 totals
+    for (int i = 0; i < holes.length; i++) {
+      if (i < 9) {
+        frontPar += holes[i].par;
+        frontYards += holes[i].yardage;
+      } else if (i < 18) {
+        backPar += holes[i].par;
+        backYards += holes[i].yardage;
+      }
+    }
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Course Summary',
+          style: TextStyle(
+            fontSize: ResponsiveHelper.fontSize(context, baseFontSize: 16),
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Table(
+          border: TableBorder.all(
+            color: Colors.grey.shade300,
+            width: 1,
+          ),
+          columnWidths: const {
+            0: FlexColumnWidth(1.5),
+            1: FlexColumnWidth(1),
+            2: FlexColumnWidth(1),
+            3: FlexColumnWidth(1),
+          },
+          children: [
+            _buildTableRow(['', 'Front 9', 'Back 9', 'Total'], isHeader: true),
+            _buildTableRow([
+              'Par', 
+              '$frontPar', 
+              holes.length > 9 ? '$backPar' : 'N/A', 
+              '${_selectedTeeBox!.parTotal}'
+            ]),
+            _buildTableRow([
+              'Yardage', 
+              '$frontYards', 
+              holes.length > 9 ? '$backYards' : 'N/A', 
+              '${_selectedTeeBox!.totalYards}'
+            ]),
+          ],
+        ),
+      ],
+    );
+  }
+  
+  // Helper for building table rows
+  TableRow _buildTableRow(List<String> cells, {bool isHeader = false}) {
+    return TableRow(
+      decoration: isHeader 
+          ? BoxDecoration(color: Colors.grey.shade200) 
+          : null,
+      children: cells.map((cell) => 
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(
+            cell,
+            style: isHeader 
+                ? const TextStyle(fontWeight: FontWeight.bold) 
+                : null,
+            textAlign: TextAlign.center,
+          ),
+        )
+      ).toList(),
+    );
+  }
+  
+  // Convert tee color string to actual color
+  Color _getTeeBoxColor(String? colorName) {
+    switch (colorName?.toLowerCase()) {
+      case 'black': return Colors.black;
+      case 'blue': return Colors.blue;
+      case 'white': return Colors.grey.shade300;
+      case 'red': return Colors.red;
+      case 'gold': return Colors.amber;
+      case 'green': return Colors.green;
+      default: return Colors.grey;
+    }
+  }
+  
+  // Get a display name for the tee color
+  String _getTeeDisplayColor(String? colorName) {
+    if (colorName == null || colorName.isEmpty) {
+      return 'Not specified';
+    }
+    
+    // Capitalize first letter of each word
+    return colorName.split(' ').map((word) => 
+      word.isNotEmpty 
+        ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+        : ''
+    ).join(' ');
   }
   
   Widget _buildDetailRow(String label, String value) {

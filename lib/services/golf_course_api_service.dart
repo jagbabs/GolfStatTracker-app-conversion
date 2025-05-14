@@ -92,6 +92,28 @@ class GolfCourseApiService {
   
   // Helper method to create a minimal valid course object when the API returns incomplete data
   static GolfCourse _createFallbackCourse(int id, Map<String, dynamic> partialData) {
+    // Create default holes for the course (18 holes, all par 4)
+    final defaultHoles = List.generate(18, (i) => Hole(
+      holeNumber: i + 1,
+      par: 4,
+      yardage: 350,
+      handicap: i + 1,
+    ));
+    
+    // Create a default tee box
+    final defaultTeeBox = TeeBox(
+      teeName: 'Standard',
+      teeColor: 'white',
+      teeGender: 'male',
+      parTotal: 72,
+      totalYards: 6300,
+      courseRating: 72.0,
+      slopeRating: 113,
+      numberOfHoles: 18,
+      holes: defaultHoles,
+    );
+    
+    // Extract available data or use defaults
     return GolfCourse(
       id: id,
       clubName: partialData['club_name'] ?? 'Unknown Club',
@@ -101,8 +123,11 @@ class GolfCourseApiService {
         state: partialData['location']?['state'],
         country: partialData['location']?['country'],
       ),
-      holes: [],
-      tees: TeeBoxes(male: [], female: []),
+      holes: defaultHoles,
+      tees: TeeBoxes(
+        male: [defaultTeeBox],
+        female: [],
+      ),
     );
   }
   
