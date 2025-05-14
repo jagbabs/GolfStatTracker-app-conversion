@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:golf_stat_tracker/models/hole.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
+import 'package:golf_stat_tracker/utils/responsive_helper.dart';
 
 class HoleInputCard extends StatefulWidget {
   final HoleScore holeScore;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:golf_stat_tracker/models/round.dart';
+import 'package:golf_stat_tracker/utils/responsive_helper.dart';
 import 'package:intl/intl.dart';
 
 class RoundSummaryCard extends StatelessWidget {
@@ -14,12 +15,20 @@ class RoundSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use responsive helper for mobile-friendly design
+    final isMobile = ResponsiveHelper.isMobile(context);
+    
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      elevation: ResponsiveHelper.getAdaptiveElevation(context),
+      margin: EdgeInsets.symmetric(
+        vertical: isMobile ? 6.0 : 8.0,
+        horizontal: isMobile ? 2.0 : 0.0,
+      ),
       child: InkWell(
+        borderRadius: BorderRadius.circular(8.0),
         onTap: onTap,
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: ResponsiveHelper.getAdaptivePadding(context),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -30,9 +39,9 @@ class RoundSummaryCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       round.courseName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: ResponsiveHelper.getAdaptiveFontSize(context, 16),
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
