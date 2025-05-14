@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:golf_stat_tracker/models/round.dart';
+import 'package:golf_stat_tracker/models/hole.dart';
 
 class StrokesGainedData {
   final double total;
