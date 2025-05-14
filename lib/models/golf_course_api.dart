@@ -45,14 +45,19 @@ class GolfCourse {
 
 class SearchResult {
   final List<GolfCourse> courses;
+  final bool missingApiKey;
 
-  SearchResult({required this.courses});
+  SearchResult({
+    required this.courses,
+    this.missingApiKey = false,
+  });
 
   factory SearchResult.fromJson(Map<String, dynamic> json) {
     return SearchResult(
       courses: (json['courses'] as List<dynamic>?)
               ?.map((c) => GolfCourse.fromJson(c))
               .toList() ?? [],
+      missingApiKey: json['missingApiKey'] == true,
     );
   }
 

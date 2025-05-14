@@ -5,7 +5,9 @@ import 'package:golf_stat_tracker/providers/course_provider.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
 import 'package:golf_stat_tracker/screens/home_screen.dart';
+import 'package:golf_stat_tracker/services/api_service.dart';
 import 'package:golf_stat_tracker/services/database_manager.dart';
+import 'package:golf_stat_tracker/services/golf_course_api_service.dart';
 import 'package:golf_stat_tracker/utils/theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,6 +17,10 @@ void main() async {
   
   // Initialize the database manager
   final databaseManager = DatabaseManager();
+  
+  // Initialize API services
+  await ApiService.initialize();
+  await GolfCourseApiService.initialize();
   
   // Check if Google Sheets is already set up
   final prefs = await SharedPreferences.getInstance();

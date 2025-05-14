@@ -43,6 +43,78 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     super.dispose();
   }
 
+  // Initialize API when screen loads
+  @override
+  void initState() {
+    super.initState();
+    // Set focus to search field when screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+      _initializeGolfApi();
+    });
+  }
+  
+  // Initialize Golf API
+  Future<void> _initializeGolfApi() async {
+    await GolfCourseApiService.initialize();
+  }
+  
+  // Show dialog to request API key
+  void _showApiKeyDialog() {
+    final TextEditingController apiKeyController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Golf Course API Key Required'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'To search for golf courses, you need to provide a Golf Course API key.',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: apiKeyController,
+                decoration: const InputDecoration(
+                  labelText: 'API Key',
+                  hintText: 'Enter your Golf Course API key',
+                  border: OutlineInputBorder(),
+                ),
+                obscureText: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final apiKey = apiKeyController.text.trim();
+                if (apiKey.isNotEmpty) {
+                  await GolfCourseApiService.setApiKey(apiKey);
+                  Navigator.of(context).pop();
+                  
+                  // Retry the search
+                  _searchCourses();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
   // Search for courses
   Future<void> _searchCourses() async {
     final query = _searchController.text.trim();
@@ -58,6 +130,15 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
     
     try {
       final results = await GolfCourseApiService.searchGolfCourses(query);
+      
+      if (results.missingApiKey) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showApiKeyDialog();
+        return;
+      }
+      
       setState(() {
         _searchResults = results.courses;
         _hasSearched = true;
@@ -103,6 +184,12 @@ class _CourseSearchScreenState extends State<CourseSearchScreen> {
       setState(() {
         _isLoading = false;
       });
+      
+      // Check if error is due to missing API key
+      if (e.toString().contains('API key not configured')) {
+        _showApiKeyDialog();
+        return;
+      }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

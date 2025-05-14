@@ -4,10 +4,12 @@ import 'package:golf_stat_tracker/models/round.dart';
 import 'package:golf_stat_tracker/providers/player_provider.dart';
 import 'package:golf_stat_tracker/providers/round_provider.dart';
 import 'package:golf_stat_tracker/screens/course_management_screen.dart';
+import 'package:golf_stat_tracker/screens/course_search_screen.dart';
 import 'package:golf_stat_tracker/screens/player_profile_screen.dart';
 import 'package:golf_stat_tracker/screens/round_entry_screen.dart';
 import 'package:golf_stat_tracker/screens/round_history_screen.dart';
 import 'package:golf_stat_tracker/screens/statistics_screen.dart';
+import 'package:golf_stat_tracker/screens/strokes_gained_screen.dart';
 import 'package:golf_stat_tracker/utils/constants.dart';
 import 'package:golf_stat_tracker/widgets/round_summary_card.dart';
 import 'package:intl/intl.dart';
@@ -36,16 +38,59 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text('Golf Stat Tracker'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const CourseManagementScreen(),
-                ),
-              );
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              switch (value) {
+                case 'courses':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CourseManagementScreen(),
+                    ),
+                  );
+                  break;
+                case 'find_course':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CourseSearchScreen(),
+                    ),
+                  );
+                  break;
+                case 'strokes_gained':
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const StrokesGainedScreen(),
+                    ),
+                  );
+                  break;
+              }
             },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'courses',
+                child: ListTile(
+                  leading: Icon(Icons.golf_course),
+                  title: Text('Manage Courses'),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'find_course',
+                child: ListTile(
+                  leading: Icon(Icons.search),
+                  title: Text('Find Golf Course'),
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'strokes_gained',
+                child: ListTile(
+                  leading: Icon(Icons.insights),
+                  title: Text('Strokes Gained Stats'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

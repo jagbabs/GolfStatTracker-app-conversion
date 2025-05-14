@@ -1,49 +1,44 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
 import 'package:golf_stat_tracker/models/golf_course_api.dart';
 import 'package:golf_stat_tracker/models/course.dart';
+import 'package:golf_stat_tracker/services/api_service.dart';
 
 class GolfCourseApiService {
-  // API settings
-  static const String _baseUrl = '/api/golf-api';
-  static String? _apiKey;
-  
-  // Set API key (will be needed when calling external API directly)
-  static void setApiKey(String apiKey) {
-    _apiKey = apiKey;
+  // Initialize the service
+  static Future<void> initialize() async {
+    await ApiService.initialize();
   }
   
-  // Create headers for API requests
-  static Map<String, String> _getHeaders() {
-    final headers = {
-      'Content-Type': 'application/json',
-    };
-    
-    if (_apiKey != null) {
-      headers['Authorization'] = 'Key $_apiKey';
-    }
-    
-    return headers;
+  // Check if API is configured
+  static bool get isApiConfigured => ApiService.isGolfCourseApiConfigured;
+  
+  // Set API key
+  static Future<void> setApiKey(String apiKey) async {
+    await ApiService.setGolfCourseApiKey(apiKey);
+  }
+  
+  // Request API key from user if not configured
+  static void requestApiKey(Function(String) onApiKeyEntered) {
+    // This would typically show a dialog to request the API key
+    // For now, we'll just pass this through to the caller
+    onApiKeyEntered('');
   }
   
   // Search for golf courses by name
   static Future<SearchResult> searchGolfCourses(String query) async {
     try {
-      final url = '$_baseUrl/search?search_query=${Uri.encodeComponent(query)}';
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(),
-      );
+      final response = await ApiService.searchGolfCourses(query);
       
-      if (response.statusCode != 200) {
-        debugPrint('Golf course search failed: ${response.reasonPhrase}');
-        debugPrint('Response body: ${response.body}');
-        return SearchResult.empty();
+      // Check if API key is missing
+      if (response['missingApiKey'] == true) {
+        return SearchResult(
+          courses: [],
+          missingApiKey: true,
+        );
       }
       
-      final data = jsonDecode(response.body);
-      return SearchResult.fromJson(data);
+      return SearchResult.fromJson(response);
     } catch (e) {
       debugPrint('Error searching for golf courses: $e');
       return SearchResult.empty();
@@ -53,26 +48,18 @@ class GolfCourseApiService {
   // Get detailed information about a specific golf course
   static Future<GolfCourse> getGolfCourseById(int id) async {
     try {
-      final url = '$_baseUrl/courses/$id';
       debugPrint('Fetching detailed info for course ID: $id');
+      final response = await ApiService.getGolfCourseById(id);
       
-      final response = await http.get(
-        Uri.parse(url),
-        headers: _getHeaders(),
-      );
-      
-      if (response.statusCode != 200) {
-        debugPrint('Failed to get golf course details: ${response.reasonPhrase}');
-        debugPrint('Response body: ${response.body}');
-        throw Exception('Failed to get golf course details');
+      // Check if API key is missing
+      if (response['missingApiKey'] == true) {
+        throw Exception('Golf Course API key not configured');
       }
       
-      final courseData = jsonDecode(response.body);
+      debugPrint('Retrieved data for ${response['club_name'] ?? 'Unknown Course'}');
+      debugPrint('Course has tee boxes: ${response['tees'] != null}');
       
-      debugPrint('Retrieved data for ${courseData['club_name'] ?? 'Unknown Course'}');
-      debugPrint('Course has tee boxes: ${courseData['tees'] != null}');
-      
-      return GolfCourse.fromJson(courseData);
+      return GolfCourse.fromJson(response);
     } catch (e) {
       debugPrint('Error getting golf course details: $e');
       throw Exception('Could not load course details: $e');
