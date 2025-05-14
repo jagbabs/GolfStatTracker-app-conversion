@@ -21,6 +21,10 @@
   <link rel="manifest" href="manifest.json">
   
   <!-- Flutter Web initialization -->
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    var serviceWorkerVersion = null;
+  </script>
   <script src="flutter.js" defer></script>
 </head>
 <body>
@@ -49,13 +53,63 @@
   
   <script>
     window.addEventListener('load', function() {
-      flutter.loader.load({
-        onEntrypointLoaded: async function(engineInitializer) {
-          let appRunner = await engineInitializer.initializeEngine();
-          await appRunner.runApp();
-          document.getElementById('loading').remove();
+      var loadingElement = document.getElementById('loading');
+      var loadingTextElement = document.getElementById('loading-text');
+      
+      // Function to display errors
+      function showError(message) {
+        loadingTextElement.innerHTML = 'Error: ' + message + '<br><small>Please try refreshing the page</small>';
+        loadingTextElement.style.color = '#e53935';
+      }
+      
+      // Wait for 30 seconds max
+      var loadTimeout = setTimeout(function() {
+        showError('App is taking too long to load');
+      }, 30000);
+      
+      // Try loading the Flutter app
+      try {
+        if (typeof flutter === 'undefined') {
+          // If flutter is undefined, create a special div to load it
+          var scriptElement = document.createElement('script');
+          scriptElement.src = 'main.dart.js';
+          scriptElement.type = 'application/javascript';
+          document.body.appendChild(scriptElement);
+          
+          // Also try the flutter loader if it gets defined
+          setTimeout(function() {
+            if (typeof flutter !== 'undefined') {
+              initFlutter();
+            } else {
+              showError('Flutter runtime not available');
+            }
+          }, 5000);
+        } else {
+          initFlutter();
         }
-      });
+      } catch (e) {
+        showError(e.message);
+      }
+      
+      // Initialize Flutter
+      function initFlutter() {
+        clearTimeout(loadTimeout);
+        flutter.loader.load({
+          onEntrypointLoaded: async function(engineInitializer) {
+            try {
+              let appRunner = await engineInitializer.initializeEngine();
+              await appRunner.runApp();
+              loadingElement.remove();
+            } catch (e) {
+              showError(e.message);
+            }
+          },
+          // Add error handler
+          onError: function(error) {
+            showError(error);
+          }
+        });
+      }
     });
   </script>
 </body>
